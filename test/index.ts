@@ -16,6 +16,7 @@ const testRunner = require('vscode/lib/testrunner'); // tslint:disable-line
 // See https://github.com/mochajs/mocha/wiki/Using-mocha-programmatically#set-options for more info
 testRunner.configure({
     reporter: 'list',
+    timeout: 5000,
     ui: 'bdd',
     useColors: true
 });

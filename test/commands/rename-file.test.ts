@@ -20,6 +20,11 @@ import {
     renameFile
 } from '../../src/extension/commands';
 
+import {
+    normalizePath,
+    promiseRetry
+} from '../helper';
+
 chai.use(sinonChai);
 
 const rootDir = path.resolve(__dirname, '..', '..', '..');
@@ -35,11 +40,13 @@ const targetFile = path.resolve(`${editorFile1}.tmp`);
 
 describe('renameFile', () => {
 
-    beforeEach(() => Promise.all([
-        fs.removeAsync(tmpDir),
-        fs.copyAsync(fixtureFile1, editorFile1),
-        fs.copyAsync(fixtureFile2, editorFile2)
-    ]));
+    beforeEach(() => promiseRetry({
+        promise: Promise.all([
+            fs.removeAsync(tmpDir),
+            fs.copyAsync(fixtureFile1, editorFile1),
+            fs.copyAsync(fixtureFile2, editorFile2)
+        ])
+    }));
 
     afterEach(() => fs.removeAsync(tmpDir));
 
@@ -129,7 +136,7 @@ describe('renameFile', () => {
 
                 return renameFile().then(() => {
                     const activeEditor: TextEditor = window.activeTextEditor;
-                    expect(activeEditor.document.fileName).to.equal(targetFile);
+                    expect(activeEditor.document.fileName).to.equal(normalizePath(targetFile));
                 });
             });
 

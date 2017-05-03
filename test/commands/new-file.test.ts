@@ -20,6 +20,11 @@ import {
     newFile
 } from '../../src/extension/commands';
 
+import {
+    normalizePath,
+    promiseRetry
+} from '../helper';
+
 chai.use(sinonChai);
 
 const rootDir = path.resolve(__dirname, '..', '..', '..');
@@ -35,11 +40,13 @@ const targetFile = path.resolve(`${editorFile1}.tmp`);
 
 describe('newFile', () => {
 
-    beforeEach(() => Promise.all([
-        fs.removeAsync(tmpDir),
-        fs.copyAsync(fixtureFile1, editorFile1),
-        fs.copyAsync(fixtureFile2, editorFile2)
-    ]));
+    beforeEach(() => promiseRetry({
+        promise: Promise.all([
+            fs.removeAsync(tmpDir),
+            fs.copyAsync(fixtureFile1, editorFile1),
+            fs.copyAsync(fixtureFile2, editorFile2)
+        ])
+    }));
 
     afterEach(() => fs.removeAsync(tmpDir));
 
@@ -127,7 +134,7 @@ describe('newFile', () => {
 
             return newFile().then(() => {
                 const activeEditor: TextEditor = window.activeTextEditor;
-                expect(activeEditor.document.fileName).to.equal(targetFile);
+                expect(activeEditor.document.fileName).to.equal(normalizePath(targetFile));
             });
         });
 
@@ -170,7 +177,7 @@ describe('newFile', () => {
 
             it('asks to overwrite destination file', () => {
 
-                const message = `File '${targetFile}' already exists.`;
+                const message = `File '${normalizePath(targetFile)}' already exists.`;
                 const action = 'Overwrite';
                 const options = { modal: true };
 

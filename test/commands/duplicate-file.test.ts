@@ -20,6 +20,11 @@ import {
     duplicateFile
 } from '../../src/extension/commands';
 
+import {
+    normalizePath,
+    promiseRetry
+} from '../helper';
+
 chai.use(sinonChai);
 
 const rootDir = path.resolve(__dirname, '..', '..', '..');
@@ -35,11 +40,13 @@ const targetFile = path.resolve(`${editorFile1}.tmp`);
 
 describe('duplicateFile', () => {
 
-    beforeEach(() => Promise.all([
-        fs.removeAsync(tmpDir),
-        fs.copyAsync(fixtureFile1, editorFile1),
-        fs.copyAsync(fixtureFile2, editorFile2)
-    ]));
+    beforeEach(() => promiseRetry({
+        promise: Promise.all([
+            fs.removeAsync(tmpDir),
+            fs.copyAsync(fixtureFile1, editorFile1),
+            fs.copyAsync(fixtureFile2, editorFile2)
+        ])
+    }));
 
     afterEach(() => fs.removeAsync(tmpDir));
 
@@ -87,7 +94,7 @@ describe('duplicateFile', () => {
 
                 return duplicateFile().then(() => {
                     const prompt = 'Duplicate As';
-                    const value = editorFile1;
+                    const value = normalizePath(editorFile1);
                     expect(window.showInputBox).to.have.been.calledWithExactly({ prompt, value });
                 });
 
@@ -129,7 +136,7 @@ describe('duplicateFile', () => {
 
                 return duplicateFile().then(() => {
                     const activeEditor: TextEditor = window.activeTextEditor;
-                    expect(activeEditor.document.fileName).to.equal(targetFile);
+                    expect(activeEditor.document.fileName).to.equal(normalizePath(targetFile));
                 });
             });
 
@@ -254,7 +261,7 @@ describe('duplicateFile', () => {
 
             return duplicateFile(Uri.file(editorFile1)).then(() => {
                 const prompt = 'Duplicate As';
-                const value = editorFile1;
+                const value = normalizePath(editorFile1);
                 expect(window.showInputBox).to.have.been.calledWithExactly({ prompt, value });
             });
 
@@ -273,7 +280,7 @@ describe('duplicateFile', () => {
 
             return duplicateFile(Uri.file(editorFile1)).then(() => {
                 const activeEditor: TextEditor = window.activeTextEditor;
-                expect(activeEditor.document.fileName).to.equal(targetFile);
+                expect(activeEditor.document.fileName).to.equal(normalizePath(targetFile));
             });
         });
 
